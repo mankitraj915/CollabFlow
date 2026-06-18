@@ -3,9 +3,10 @@ export class GraphState {
         this.nodes = new Map();
         this.edges = [];
         this.cpm = { total_duration: 0, critical_path: [], schedules: {}, topological_order: [] };
-        this.selectedNodeId = null;
+        this.selectedNodeIds = new Set();
+        this.selectionBox = { active: false, startX: 0, startY: 0, currentX: 0, currentY: 0 };
         this.camera = { x: 80, y: 80, zoom: 1 };
-        this.drag = { active: false, nodeId: null, offsetX: 0, offsetY: 0 };
+        this.drag = { active: false, nodeIds: [], offsetX: 0, offsetY: 0 };
         this.pan = { active: false, startX: 0, startY: 0, camStartX: 0, camStartY: 0 };
         this.edgeMode = { active: false, sourceId: null };
         this.lastMoveEmit = 0;
@@ -92,9 +93,7 @@ export class GraphState {
         } else if (action === "node.deleted") {
             this.nodes.delete(payload.node_id);
             this.edges = this.edges.filter(e => e.source_id !== payload.node_id && e.target_id !== payload.node_id);
-            if (this.selectedNodeId === payload.node_id) {
-                this.selectedNodeId = null;
-            }
+            this.selectedNodeIds.delete(payload.node_id);
             if (payload.cpm) {
                 this.cpm = payload.cpm;
                 this.applyCPMToNodes(payload.cpm);
@@ -120,6 +119,16 @@ export class GraphState {
                 this.cpm = payload.cpm;
                 this.applyCPMToNodes(payload.cpm);
             }
+        } else if (action === "cursor.moved") {
+            if (!this.cursors) this.cursors = new Map();
+            this.cursors.set(payload.cursor_id, {
+                x: payload.x,
+                y: payload.y,
+                username: payload.username,
+                lastUpdate: performance.now(),
+                targetX: payload.x,
+                targetY: payload.y
+            });
         }
     }
 

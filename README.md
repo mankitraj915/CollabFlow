@@ -32,14 +32,14 @@ Unlike standard "CRUD" to-do lists, CollabFlow tackles the hard engineering prob
 ### 1. Concurrent Transaction Locking
 What happens when User A and User B edit a complex dependency tree at the exact same millisecond? CollabFlow utilizes pessimistic locking (`select_for_update`) via PostgreSQL atomic transactions to serialize concurrent topological updates, ensuring mathematical integrity without dirty reads.
 
-### 2. Real-Time Topological Sorting
-Utilizes **Kahn's Algorithm** to parse Directed Acyclic Graphs (DAGs) on the fly. As users draw edges over a WebSocket connection, the backend intercepts the payload, validates for cyclical dependencies, and instantly broadcasts the newly calculated Critical Path back to all connected clients.
+### 2. Live Multiplayer Cursors & Real-Time Math
+Utilizes **Kahn's Algorithm** to parse Directed Acyclic Graphs (DAGs) on the fly. As users draw edges and move their mouse cursors over a WebSocket connection, the backend intercepts the payload, validates for cyclical dependencies, and instantly broadcasts both cursor movements and the newly calculated Critical Path back to all connected clients using high-performance Redis pub/sub.
 
 ### 3. Zero-Dependency Canvas Engine
-Eschewing heavy frameworks like React or Vue, the frontend is a purely custom-built HTML5 Canvas engine. This reduces bundle sizes by 85% while providing 60fps drag-and-drop node rendering and dynamic Bézier curve edge routing.
+Eschewing heavy frameworks like React or Vue, the frontend is a purely custom-built HTML5 Canvas engine. This reduces bundle sizes by 85% while providing smooth 60fps drag-and-drop node rendering, dynamic Bézier curve edge routing, and continuous linear interpolation (lerping) for remote cursors.
 
-### 4. High-Performance ASGI Caching
-WebSocket broadcast payloads are aggressively cached in Redis. The initial graph hydration drops from ~200ms DB lookups to <15ms memory retrievals, invalidating intelligently only on structural mutations.
+### 4. Vercel-like Aesthetic & Public Access Control
+CollabFlow features a sleek, dark-mode design system reminiscent of Linear or Vercel. Project owners can effortlessly toggle projects to public to share a read-only live view of their dynamic dependency graphs with guests.
 
 ## 🛠️ Local Development & Verification
 
@@ -65,4 +65,4 @@ docker compose exec web pytest -v
 ```
 
 ## 🤝 Contributing
-Want to add Live Multiplayer Cursors or CRDT-based Undo/Redo? We'd love your help. Read our [Contribution Guide](CONTRIBUTING.md) to get started.
+Want to add Event Sourcing or CRDT-based Undo/Redo? We'd love your help. Read our [Contribution Guide](CONTRIBUTING.md) to get started.

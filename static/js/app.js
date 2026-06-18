@@ -21,6 +21,25 @@ document.addEventListener("DOMContentLoaded", () => {
     
     uiManager.setEngine(engine);
 
+    import('./CommandPalette.js').then(({ CommandPalette }) => {
+        new CommandPalette({
+            actions: [
+                { id: 'create_node', title: 'Create Node', icon: '✨' },
+                { id: 'connect_nodes', title: 'Connect Nodes', icon: '🔗' },
+                { id: 'zoom_fit', title: 'Zoom to Fit', icon: '🔍' },
+                { id: 'share', title: 'Share Project', icon: '🌐' },
+                { id: 'dashboard', title: 'Go to Dashboard', icon: '🏠' }
+            ],
+            onAction: (actionId) => {
+                if (actionId === 'create_node') window.openNodeModal();
+                if (actionId === 'connect_nodes') window.toggleEdgeMode();
+                if (actionId === 'zoom_fit') engine.zoomToFit();
+                if (actionId === 'share') document.getElementById('shareModal').classList.add('visible');
+                if (actionId === 'dashboard') window.location.href = '/dashboard/';
+            }
+        });
+    });
+
     // Bind UI actions to global scope for HTML onclick attributes
     window.openNodeModal = () => uiManager.openNodeModal();
     window.closeNodeModal = () => uiManager.closeNodeModal();

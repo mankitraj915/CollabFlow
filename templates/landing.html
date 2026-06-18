@@ -1,0 +1,221 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CollabFlow — Real-Time Dependency Graphs</title>
+    <meta name="description" content="Visual Critical Path Analysis for Engineering Teams. Real-time multiplayer dependency graph and WBS engine.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/design-system.css' %}">
+    <style>
+        body {
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 48px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(12px);
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-default);
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .brand-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
+            border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 14px; color: white;
+            box-shadow: var(--shadow-glow-blue);
+        }
+        .brand-text {
+            font-size: 18px; font-weight: 700; color: var(--text-primary);
+        }
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 24px;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: var(--text-primary); }
+        
+        .hero {
+            padding: 180px 24px 100px;
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -100px; left: 50%;
+            transform: translateX(-50%);
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, var(--accent-blue-dim) 0%, rgba(0,0,0,0) 70%);
+            z-index: -1;
+        }
+        .hero h1 {
+            font-size: 64px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero p {
+            font-size: 20px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .cta-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .features {
+            padding: 100px 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+        .feature-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-xl);
+            padding: 40px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .feature-card:hover { transform: translateY(-4px); border-color: var(--border-focus); }
+        .feature-icon {
+            width: 48px; height: 48px;
+            background: var(--accent-blue-dim);
+            color: var(--accent-blue);
+            border-radius: var(--radius-lg);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 24px;
+        }
+        .feature-card h3 { font-size: 20px; margin-bottom: 12px; }
+        .feature-card p { color: var(--text-secondary); font-size: 15px; }
+
+        .architecture {
+            padding: 100px 24px;
+            background: var(--bg-secondary);
+            text-align: center;
+        }
+        .architecture h2 { font-size: 36px; margin-bottom: 60px; letter-spacing: -1px; }
+        .stack-grid {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .stack-item {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-default);
+            padding: 16px 32px;
+            border-radius: 100px;
+            font-family: var(--font-mono);
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .stack-item::before {
+            content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-blue);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 40px; }
+            .hero p { font-size: 16px; }
+            .features { grid-template-columns: 1fr; }
+            nav { padding: 16px 24px; }
+            .nav-links { display: none; }
+            .cta-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="brand">
+            <div class="brand-icon">CF</div>
+            <span class="brand-text">CollabFlow</span>
+        </a>
+        <div class="nav-links">
+            <a href="{% url 'login' %}">Log In</a>
+            <a href="{% url 'signup' %}" class="btn btn-primary" style="padding: 8px 16px; margin-left: 16px;">Sign Up</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Visual Critical Path Analysis for Engineering Teams</h1>
+        <p>Real-time multiplayer dependency graphing. Map your work breakdown structure, calculate critical paths instantly, and collaborate with zero latency.</p>
+        <div class="cta-group">
+            <a href="{% url 'signup' %}" class="btn btn-primary">Start Free</a>
+            <form method="post" action="{% url 'guest_login' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary">Try Guest Demo</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+            </div>
+            <h3>Critical Path Method</h3>
+            <p>Automatically calculates Earliest Start, Latest Finish, and Total Slack. Instantly identifies critical tasks preventing project delays.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3>Real-Time Multiplayer</h3>
+            <p>Built on Django Channels and Redis. See cursors, node movements, and connection changes instantly as your team collaborates.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <h3>Cycle Detection</h3>
+            <p>Robust graph traversal algorithms prevent circular dependencies, ensuring your project timeline remains mathematically sound.</p>
+        </div>
+    </section>
+
+    <section class="architecture">
+        <h2>Production-Grade Engineering</h2>
+        <div class="stack-grid">
+            <div class="stack-item">Django 5.1</div>
+            <div class="stack-item">Django Channels (ASGI)</div>
+            <div class="stack-item">Redis Pub/Sub</div>
+            <div class="stack-item">PostgreSQL</div>
+            <div class="stack-item">Vanilla Canvas API</div>
+            <div class="stack-item">Daphne</div>
+        </div>
+    </section>
+</body>
+</html>

@@ -77,6 +77,12 @@ export class WebSocketManager {
         }
     }
 
+    sendCursor(x, y) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({ action: "cursor.move", payload: { x, y } }));
+        }
+    }
+
     flushQueue() {
         while (this.actionQueue.length > 0) {
             const msg = this.actionQueue.shift();

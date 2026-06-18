@@ -5,133 +5,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CollabFlow — Dashboard</title>
-    <meta name="description" content="CollabFlow Project Dashboard">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/design-system.css' %}">
     <style>
-        :root {
-            --bg-primary: #06080d;
-            --bg-secondary: #0c111b;
-            --bg-tertiary: #151c2c;
-            --bg-elevated: #1a2236;
-            --text-primary: #edf2f7;
-            --text-secondary: #94a3b8;
-            --text-muted: #5a6a80;
-            --accent-blue: #3b82f6;
-            --accent-indigo: #6366f1;
-            --border-subtle: rgba(148, 163, 184, 0.06);
-            --border-default: rgba(148, 163, 184, 0.12);
-            --radius-md: 10px;
-            --radius-xl: 20px;
-            --font-sans: 'Inter', -apple-system, sans-serif;
-            --shadow-lg: 0 20px 48px rgba(0,0,0,0.5);
-            --shadow-glow-blue: 0 0 20px rgba(59, 130, 246, 0.2);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: var(--font-sans);
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
+            min-height: 100vh;
         }
         .header {
-            padding: 20px 40px;
+            padding: 0 24px;
+            height: 64px;
             border-bottom: 1px solid var(--border-default);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--bg-secondary);
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         .brand {
             display: flex;
             align-items: center;
             gap: 12px;
+            text-decoration: none;
         }
         .brand-icon {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
-            border-radius: var(--radius-md);
+            border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            font-size: 18px;
+            font-size: 14px;
             color: white;
             box-shadow: var(--shadow-glow-blue);
         }
         .brand-text {
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, var(--text-primary), var(--accent-blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
         }
         .user-nav {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 24px;
             font-size: 14px;
-            color: var(--text-secondary);
         }
-        .user-nav a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s ease;
-        }
-        .user-nav a:hover {
+        .user-nav-username {
             color: var(--text-primary);
+            font-weight: 500;
         }
+        .btn-logout {
+            background: none; border: none; color: var(--text-secondary);
+            cursor: pointer; font-size: 14px; font-weight: 500;
+            transition: color 0.2s;
+        }
+        .btn-logout:hover { color: var(--text-primary); }
+        
         .main {
             flex: 1;
-            padding: 60px 40px;
-            max-width: 1200px;
+            padding: 64px 24px;
+            max-width: 1040px;
             margin: 0 auto;
             width: 100%;
         }
         .dashboard-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 40px;
+            align-items: center;
+            margin-bottom: 48px;
         }
         .dashboard-title h1 {
             font-size: 32px;
-            font-weight: 800;
+            font-weight: 700;
             letter-spacing: -1px;
             margin-bottom: 8px;
         }
-        .dashboard-title p {
-            color: var(--text-secondary);
-            font-size: 15px;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: var(--radius-md);
-            font-size: 14px;
-            font-weight: 600;
-            font-family: var(--font-sans);
-            cursor: pointer;
-            box-shadow: var(--shadow-glow-blue);
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .btn-primary:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
+        
         .projects-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
             gap: 24px;
         }
         .project-card {
@@ -139,27 +97,29 @@
             border: 1px solid var(--border-default);
             border-radius: var(--radius-xl);
             padding: 24px;
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
             display: flex;
             flex-direction: column;
             text-decoration: none;
+            position: relative;
         }
         .project-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--accent-blue);
+            border-color: var(--border-focus);
+            background: var(--bg-elevated);
+            transform: translateY(-2px);
             box-shadow: var(--shadow-lg);
         }
         .project-card h3 {
             color: var(--text-primary);
-            font-size: 18px;
-            font-weight: 700;
+            font-size: 16px;
+            font-weight: 600;
             margin-bottom: 8px;
         }
         .project-card p {
             color: var(--text-secondary);
             font-size: 14px;
             line-height: 1.5;
-            margin-bottom: 20px;
+            margin-bottom: 32px;
             flex: 1;
         }
         .project-meta {
@@ -168,9 +128,14 @@
             align-items: center;
             font-size: 12px;
             color: var(--text-muted);
-            border-top: 1px solid var(--border-subtle);
-            padding-top: 16px;
         }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--accent-emerald);
+            display: inline-block; margin-right: 6px;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
         .empty-state {
             text-align: center;
             padding: 80px 20px;
@@ -178,93 +143,23 @@
             border-radius: var(--radius-xl);
             border: 1px dashed var(--border-default);
         }
-        .empty-state h3 {
-            font-size: 20px;
-            margin-bottom: 12px;
-        }
-        .empty-state p {
-            color: var(--text-secondary);
-            margin-bottom: 24px;
-        }
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-        .modal-overlay.visible { display: flex; }
-        .modal {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-xl);
-            padding: 32px;
-            width: 400px;
-            box-shadow: var(--shadow-lg);
-        }
-        .modal h3 { font-size: 20px; margin-bottom: 24px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 12px 16px;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-default);
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-size: 14px;
-            font-family: var(--font-sans);
-            outline: none;
-            transition: border-color 0.2s ease;
-        }
-        .form-group input:focus {
-            border-color: var(--accent-blue);
-        }
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 32px;
-        }
-        .btn-secondary {
-            background: var(--bg-tertiary);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-default);
-            padding: 12px 24px;
-            border-radius: var(--radius-md);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .btn-secondary:hover {
-            background: var(--bg-elevated);
-            color: var(--text-primary);
-        }
+        .empty-state h3 { font-size: 18px; margin-bottom: 8px; }
+        .empty-state p { color: var(--text-secondary); margin-bottom: 24px; font-size: 14px; }
+        
+        .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
     </style>
 </head>
 <body>
     <header class="header">
-        <div class="brand">
+        <a href="/" class="brand">
             <div class="brand-icon">CF</div>
             <span class="brand-text">CollabFlow</span>
-        </div>
+        </a>
         <div class="user-nav">
-            <span>{{ user.username }}</span>
+            <span class="user-nav-username">{{ user.username }}</span>
             <form method="post" action="{% url 'logout' %}" style="display:inline;">
                 {% csrf_token %}
-                <button type="submit" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-weight:500;">Log Out</button>
+                <button type="submit" class="btn-logout">Log Out</button>
             </form>
         </div>
     </header>
@@ -272,10 +167,11 @@
     <main class="main">
         <div class="dashboard-header">
             <div class="dashboard-title">
-                <h1>Your Projects</h1>
-                <p>Manage your real-time dependency graphs.</p>
+                <h1>Projects</h1>
             </div>
-            <button class="btn-primary" onclick="openCreateModal()">New Project</button>
+            <button class="btn-primary" onclick="openCreateModal()">
+                Create Project <span class="kbd-hint">C</span>
+            </button>
         </div>
 
         {% if projects %}
@@ -285,7 +181,7 @@
                         <h3>{{ project.name }}</h3>
                         <p>{{ project.description|default:"No description provided." }}</p>
                         <div class="project-meta">
-                            <span>Updated {{ project.updated_at|date:"M d, Y" }}</span>
+                            <span><span class="status-dot"></span>Updated {{ project.updated_at|date:"M d" }}</span>
                             <span>{{ project.nodes.count }} Nodes</span>
                         </div>
                     </a>
@@ -307,11 +203,11 @@
                 {% csrf_token %}
                 <div class="form-group">
                     <label for="id_name">Project Name</label>
-                    <input type="text" id="id_name" name="name" required placeholder="e.g., Q3 Launch Roadmap" autofocus>
+                    <input type="text" id="id_name" name="name" required placeholder="e.g., Q3 Launch Roadmap" autocomplete="off">
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-secondary" onclick="closeCreateModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Create</button>
+                    <button type="submit" class="btn-primary" style="height:40px;">Create Project</button>
                 </div>
             </form>
         </div>
@@ -327,6 +223,25 @@
         }
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeCreateModal();
+            // Command palette shortcut 'C' to create project
+            if (e.key.toLowerCase() === 'c' && document.activeElement.tagName !== 'INPUT') {
+                e.preventDefault();
+                openCreateModal();
+            }
+        });
+    </script>
+    <script type="module">
+        import { CommandPalette } from "{% static 'js/CommandPalette.js' %}";
+        
+        const palette = new CommandPalette({
+            actions: [
+                { id: 'create_project', title: 'Create Project', icon: '✨' },
+                { id: 'logout', title: 'Log Out', icon: '🚪' }
+            ],
+            onAction: (actionId) => {
+                if (actionId === 'create_project') openCreateModal();
+                if (actionId === 'logout') document.querySelector('form[action="{% url \'logout\' %}"]').submit();
+            }
         });
     </script>
 </body>

@@ -22,6 +22,8 @@ const COLORS = {
     edgeModeHighlight: "#6366f1",
     criticalGlow: "rgba(245, 158, 11, 0.2)",
     selectedGlow: "rgba(59, 130, 246, 0.2)",
+    selectionBoxFill: "rgba(59, 130, 246, 0.1)",
+    selectionBoxStroke: "rgba(59, 130, 246, 0.5)",
 };
 
 export class CanvasEngine {
@@ -86,8 +88,77 @@ export class CanvasEngine {
         this.drawGrid(w, h);
         this.drawEdges();
         this.drawNodes();
+        this.drawSelectionBox();
 
         this.ctx.restore();
+        
+        this.drawMinimap();
+        this.drawCursors();
+    }
+
+    drawMinimap() {
+        const padding = 16;
+        const width = 200;
+        const height = 150;
+        const rect = this.canvas.getBoundingClientRect();
+        const x = rect.width - width - padding;
+        const y = rect.height - height - padding;
+
+        this.ctx.fillStyle = "rgba(10, 10, 10, 0.8)";
+        this.ctx.fillRect(x, y, width, height);
+        this.ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(x, y, width, height);
+
+        if (this.state.nodes.size === 0) return;
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        this.state.nodes.forEach(node => {
+            if (node.position_x < minX) minX = node.position_x;
+            if (node.position_y < minY) minY = node.position_y;
+            if (node.position_x > maxX) maxX = node.position_x;
+            if (node.position_y > maxY) maxY = node.position_y;
+        });
+        maxX += NODE_WIDTH;
+        maxY += NODE_HEIGHT;
+
+        const viewMin = this.screenToWorld(0, 0);
+        const viewMax = this.screenToWorld(rect.width, rect.height);
+        
+        const mapMinX = Math.min(minX, viewMin.x);
+        const mapMinY = Math.min(minY, viewMin.y);
+        const mapMaxX = Math.max(maxX, viewMax.x);
+        const mapMaxY = Math.max(maxY, viewMax.y);
+
+        const mapW = mapMaxX - mapMinX;
+        const mapH = mapMaxY - mapMinY;
+
+        const scaleX = width / Math.max(mapW, 1);
+        const scaleY = height / Math.max(mapH, 1);
+        const scale = Math.min(scaleX, scaleY) * 0.9;
+
+        const offsetX = x + (width - mapW * scale) / 2 - mapMinX * scale;
+        const offsetY = y + (height - mapH * scale) / 2 - mapMinY * scale;
+
+        this.ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+        this.state.nodes.forEach(node => {
+            const nx = node.position_x * scale + offsetX;
+            const ny = node.position_y * scale + offsetY;
+            const nw = NODE_WIDTH * scale;
+            const nh = NODE_HEIGHT * scale;
+            this.ctx.fillRect(nx, ny, nw, nh);
+        });
+
+        const vx = viewMin.x * scale + offsetX;
+        const vy = viewMin.y * scale + offsetY;
+        const vw = (viewMax.x - viewMin.x) * scale;
+        const vh = (viewMax.y - viewMin.y) * scale;
+
+        this.ctx.strokeStyle = "rgba(59, 130, 246, 0.8)";
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeRect(vx, vy, vw, vh);
+        this.ctx.fillStyle = "rgba(59, 130, 246, 0.1)";
+        this.ctx.fillRect(vx, vy, vw, vh);
     }
 
     drawGrid(viewWidth, viewHeight) {
@@ -198,7 +269,7 @@ export class CanvasEngine {
         this.state.nodes.forEach(node => {
             const x = node.position_x;
             const y = node.position_y;
-            const isSelected = this.state.selectedNodeId === node.id;
+            const isSelected = this.state.selectedNodeIds.has(node.id);
             const isCritical = node.is_critical;
             const isEdgeSource = this.state.edgeMode.active && this.state.edgeMode.sourceId === node.id;
 
@@ -299,6 +370,50 @@ export class CanvasEngine {
         return hitId;
     }
 
+    drawSelectionBox() {
+        if (!this.state.selectionBox.active) return;
+        const sb = this.state.selectionBox;
+        const x = Math.min(sb.startX, sb.currentX);
+        const y = Math.min(sb.startY, sb.currentY);
+        const w = Math.abs(sb.currentX - sb.startX);
+        const h = Math.abs(sb.currentY - sb.startY);
+
+        this.ctx.fillStyle = COLORS.selectionBoxFill;
+        this.ctx.fillRect(x, y, w, h);
+        this.ctx.strokeStyle = COLORS.selectionBoxStroke;
+        this.ctx.lineWidth = 1 / this.state.camera.zoom;
+        this.ctx.strokeRect(x, y, w, h);
+    }
+
+    zoomToFit() {
+        if (this.state.nodes.size === 0) return;
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        this.state.nodes.forEach(node => {
+            if (node.position_x < minX) minX = node.position_x;
+            if (node.position_y < minY) minY = node.position_y;
+            if (node.position_x > maxX) maxX = node.position_x;
+            if (node.position_y > maxY) maxY = node.position_y;
+        });
+        maxX += NODE_WIDTH;
+        maxY += NODE_HEIGHT;
+        
+        const padding = 100;
+        const rect = this.canvas.getBoundingClientRect();
+        const viewW = rect.width;
+        const viewH = rect.height;
+
+        const w = maxX - minX;
+        const h = maxY - minY;
+
+        const zoomX = (viewW - padding * 2) / Math.max(w, 1);
+        const zoomY = (viewH - padding * 2) / Math.max(h, 1);
+        const zoom = Math.max(0.1, Math.min(zoomX, zoomY, 2));
+
+        this.state.camera.zoom = zoom;
+        this.state.camera.x = (viewW - w * zoom) / 2 - minX * zoom;
+        this.state.camera.y = (viewH - h * zoom) / 2 - minY * zoom;
+    }
+
     onMouseDown(e) {
         const rect = this.canvas.getBoundingClientRect();
         const sx = e.clientX - rect.left;
@@ -333,20 +448,35 @@ export class CanvasEngine {
         }
 
         if (hitId) {
-            this.state.selectedNodeId = hitId;
-            const node = this.state.nodes.get(hitId);
+            if (!this.state.selectedNodeIds.has(hitId)) {
+                if (!e.metaKey && !e.ctrlKey && !e.shiftKey) {
+                    this.state.selectedNodeIds.clear();
+                }
+                this.state.selectedNodeIds.add(hitId);
+            }
             this.state.drag.active = true;
-            this.state.drag.nodeId = hitId;
+            this.state.drag.nodeIds = Array.from(this.state.selectedNodeIds);
+            const node = this.state.nodes.get(hitId);
             this.state.drag.offsetX = world.x - node.position_x;
             this.state.drag.offsetY = world.y - node.position_y;
             this.canvas.classList.add("dragging-node");
         } else {
-            this.state.selectedNodeId = null;
-            this.state.pan.active = true;
-            this.state.pan.startX = e.clientX;
-            this.state.pan.startY = e.clientY;
-            this.state.pan.camStartX = this.state.camera.x;
-            this.state.pan.camStartY = this.state.camera.y;
+            if (e.button === 0 && !e.shiftKey) {
+                this.state.selectionBox.active = true;
+                this.state.selectionBox.startX = world.x;
+                this.state.selectionBox.startY = world.y;
+                this.state.selectionBox.currentX = world.x;
+                this.state.selectionBox.currentY = world.y;
+                if (!e.metaKey && !e.ctrlKey) {
+                    this.state.selectedNodeIds.clear();
+                }
+            } else {
+                this.state.pan.active = true;
+                this.state.pan.startX = e.clientX;
+                this.state.pan.startY = e.clientY;
+                this.state.pan.camStartX = this.state.camera.x;
+                this.state.pan.camStartY = this.state.camera.y;
+            }
         }
 
         this.uiManager.updateSidebar();
@@ -361,42 +491,92 @@ export class CanvasEngine {
             return;
         }
 
-        if (!this.state.drag.active) return;
-
         const rect = this.canvas.getBoundingClientRect();
         const sx = e.clientX - rect.left;
         const sy = e.clientY - rect.top;
         const world = this.screenToWorld(sx, sy);
 
-        const node = this.state.nodes.get(this.state.drag.nodeId);
-        if (!node) return;
-
-        node.position_x = world.x - this.state.drag.offsetX;
-        node.position_y = world.y - this.state.drag.offsetY;
-
         const now = performance.now();
-        if (now - this.state.lastMoveEmit >= MOVE_THROTTLE_MS) {
-            this.wsManager.send("node.move", {
-                node_id: node.id,
-                position_x: Math.round(node.position_x * 10) / 10,
-                position_y: Math.round(node.position_y * 10) / 10,
+        if (now - (this.lastCursorEmit || 0) >= MOVE_THROTTLE_MS) {
+            this.wsManager.sendCursor(Math.round(world.x * 10) / 10, Math.round(world.y * 10) / 10);
+            this.lastCursorEmit = now;
+        }
+
+        if (this.state.selectionBox.active) {
+            this.state.selectionBox.currentX = world.x;
+            this.state.selectionBox.currentY = world.y;
+            return;
+        }
+
+        if (!this.state.drag.active) return;
+
+        const dx = world.x - this.state.drag.offsetX;
+        const dy = world.y - this.state.drag.offsetY;
+
+        // Find delta from the anchor node (the one we grabbed)
+        const anchorNode = this.state.nodes.get(this.state.drag.nodeIds[0]);
+        if (!anchorNode) return;
+        const deltaX = dx - anchorNode.position_x;
+        const deltaY = dy - anchorNode.position_y;
+
+        this.state.drag.nodeIds.forEach(id => {
+            const node = this.state.nodes.get(id);
+            if (node) {
+                node.position_x += deltaX;
+                node.position_y += deltaY;
+            }
+        });
+
+        const nowMove = performance.now();
+        if (nowMove - this.state.lastMoveEmit >= MOVE_THROTTLE_MS) {
+            this.state.drag.nodeIds.forEach(id => {
+                const node = this.state.nodes.get(id);
+                if (node) {
+                    this.wsManager.send("node.move", {
+                        node_id: node.id,
+                        position_x: Math.round(node.position_x * 10) / 10,
+                        position_y: Math.round(node.position_y * 10) / 10,
+                    });
+                }
             });
-            this.state.lastMoveEmit = now;
+            this.state.lastMoveEmit = nowMove;
         }
     }
 
     onMouseUp(e) {
+        if (this.state.selectionBox.active) {
+            this.state.selectionBox.active = false;
+            const sb = this.state.selectionBox;
+            const x1 = Math.min(sb.startX, sb.currentX);
+            const y1 = Math.min(sb.startY, sb.currentY);
+            const x2 = Math.max(sb.startX, sb.currentX);
+            const y2 = Math.max(sb.startY, sb.currentY);
+
+            this.state.nodes.forEach(node => {
+                const nx1 = node.position_x;
+                const ny1 = node.position_y;
+                const nx2 = nx1 + NODE_WIDTH;
+                const ny2 = ny1 + NODE_HEIGHT;
+                if (nx1 < x2 && nx2 > x1 && ny1 < y2 && ny2 > y1) {
+                    this.state.selectedNodeIds.add(node.id);
+                }
+            });
+            this.uiManager.updateSidebar();
+        }
+
         if (this.state.drag.active) {
-            const node = this.state.nodes.get(this.state.drag.nodeId);
-            if (node) {
-                this.wsManager.send("node.move", {
-                    node_id: node.id,
-                    position_x: Math.round(node.position_x * 10) / 10,
-                    position_y: Math.round(node.position_y * 10) / 10,
-                });
-            }
+            this.state.drag.nodeIds.forEach(id => {
+                const node = this.state.nodes.get(id);
+                if (node) {
+                    this.wsManager.send("node.move", {
+                        node_id: node.id,
+                        position_x: Math.round(node.position_x * 10) / 10,
+                        position_y: Math.round(node.position_y * 10) / 10,
+                    });
+                }
+            });
             this.state.drag.active = false;
-            this.state.drag.nodeId = null;
+            this.state.drag.nodeIds = [];
             this.canvas.classList.remove("dragging-node");
         }
         this.state.pan.active = false;
@@ -448,5 +628,60 @@ export class CanvasEngine {
                 this.uiManager.deleteSelected();
             }
         }
+    }
+
+    drawCursors() {
+        if (!this.state.cursors) return;
+        const now = performance.now();
+        
+        this.state.cursors.forEach((cursor, id) => {
+            // Remove cursors older than 10 seconds
+            if (now - cursor.lastUpdate > 10000) {
+                this.state.cursors.delete(id);
+                return;
+            }
+
+            // Lerp position for smooth movement
+            cursor.x += (cursor.targetX - cursor.x) * 0.4;
+            cursor.y += (cursor.targetY - cursor.y) * 0.4;
+
+            const screenPos = this.worldToScreen(cursor.x, cursor.y);
+            const x = screenPos.x;
+            const y = screenPos.y;
+
+            // Generate deterministic color from username
+            let hash = 0;
+            const username = cursor.username || "Guest";
+            for (let i = 0; i < username.length; i++) hash = username.charCodeAt(i) + ((hash << 5) - hash);
+            const hue = Math.abs(hash) % 360;
+            const color = `hsl(${hue}, 80%, 60%)`;
+
+            this.ctx.fillStyle = color;
+            
+            // Draw Cursor Pointer
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, y);
+            this.ctx.lineTo(x + 12, y + 12);
+            this.ctx.lineTo(x + 5, y + 14);
+            this.ctx.lineTo(x, y + 20);
+            this.ctx.closePath();
+            this.ctx.fill();
+            this.ctx.strokeStyle = '#fff';
+            this.ctx.lineWidth = 1;
+            this.ctx.stroke();
+
+            // Draw Name Badge
+            this.ctx.font = "600 11px Inter, sans-serif";
+            const textWidth = this.ctx.measureText(username).width;
+            
+            this.ctx.beginPath();
+            this.ctx.roundRect(x + 12, y + 16, textWidth + 10, 18, 4);
+            this.ctx.fill();
+            
+            this.ctx.fillStyle = '#fff';
+            this.ctx.textAlign = 'left';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(username, x + 17, y + 25);
+        });
     }
 }

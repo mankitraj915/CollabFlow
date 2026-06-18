@@ -91,6 +91,7 @@ class GraphConsumer(AsyncWebsocketConsumer):
             "node.move": self._handle_node_move,
             "edge.create": self._handle_edge_create,
             "edge.delete": self._handle_edge_delete,
+            "cursor.move": self._handle_cursor_move,
         }
 
         handler = handler_map.get(action)
@@ -101,11 +102,35 @@ class GraphConsumer(AsyncWebsocketConsumer):
         await handler(payload)
 
     async def graph_update(self, event: dict[str, Any]) -> None:
+        if event.get("sender_channel_name") == self.channel_name and event.get("action") == "cursor.moved":
+            return
+            
         await self.send(text_data=json.dumps({
             "type": "delta",
             "action": event["action"],
             "payload": event["payload"],
         }))
+
+    async def _handle_cursor_move(self, payload: dict[str, Any]) -> None:
+        x = payload.get("x")
+        y = payload.get("y")
+        if x is None or y is None:
+            return
+            
+        await self.channel_layer.group_send(
+            self.group_name,
+            {
+                "type": "graph.update",
+                "action": "cursor.moved",
+                "payload": {
+                    "cursor_id": self.channel_name,
+                    "x": float(x),
+                    "y": float(y),
+                    "username": self.scope["user"].username if self.scope.get("user") and self.scope.get("user").is_authenticated else "Guest"
+                },
+                "sender_channel_name": self.channel_name
+            },
+        )
 
     async def _handle_node_create(self, payload: dict[str, Any]) -> None:
         label: str | None = payload.get("label")

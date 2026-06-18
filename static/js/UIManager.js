@@ -71,7 +71,7 @@ export class UIManager {
             if (!node) return;
 
             const isCritical = node.is_critical;
-            const isSelected = this.state.selectedNodeId === nodeId;
+            const isSelected = this.state.selectedNodeIds.has(nodeId);
             let cardClass = "wbs-card";
             if (isCritical) cardClass += " critical";
             if (isSelected) cardClass += " selected";
@@ -107,14 +107,18 @@ export class UIManager {
 
         // Attach event listeners
         wbsList.querySelectorAll(".wbs-card").forEach(card => {
-            card.addEventListener("click", () => {
-                this.selectNodeFromSidebar(card.getAttribute("data-node-id"));
+            card.addEventListener("click", (e) => {
+                this.selectNodeFromSidebar(card.getAttribute("data-node-id"), e.shiftKey || e.metaKey || e.ctrlKey);
             });
         });
     }
 
-    selectNodeFromSidebar(nodeId) {
-        this.state.selectedNodeId = nodeId;
+    selectNodeFromSidebar(nodeId, multiSelect = false) {
+        if (!multiSelect) {
+            this.state.selectedNodeIds.clear();
+        }
+        this.state.selectedNodeIds.add(nodeId);
+        
         const node = this.state.nodes.get(nodeId);
         if (node && this.engine) {
             const screenPos = this.engine.worldToScreen(
@@ -195,12 +199,14 @@ export class UIManager {
     }
 
     deleteSelected() {
-        if (!this.state.selectedNodeId) {
+        if (this.state.selectedNodeIds.size === 0) {
             this.showToast("Select a node to delete", "info");
             return;
         }
-        this.wsManager.send("node.delete", { node_id: this.state.selectedNodeId });
-        this.state.selectedNodeId = null;
+        this.state.selectedNodeIds.forEach(nodeId => {
+            this.wsManager.send("node.delete", { node_id: nodeId });
+        });
+        this.state.selectedNodeIds.clear();
         this.updateSidebar();
     }
 }
