@@ -1,0 +1,38 @@
+databases:
+  - name: collabflow-db
+    databaseName: collabflow
+    user: collabflow
+    plan: free
+
+services:
+  - type: redis
+    name: collabflow-redis
+    plan: free
+    ipAllowList: []
+
+  - type: web
+    name: collabflow-web
+    env: python
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "daphne -b 0.0.0.0 -p $PORT collabflow.asgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: collabflow-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: collabflow-redis
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: collabflow-web.onrender.com
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        value: https://collabflow-web.onrender.com
+      - key: PYTHON_VERSION
+        value: 3.11.0
