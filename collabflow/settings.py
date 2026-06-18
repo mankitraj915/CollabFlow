@@ -102,6 +102,7 @@ USE_I18N: bool = True
 USE_TZ: bool = True
 
 STATIC_URL: str = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT: Path = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE: str = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
