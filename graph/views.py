@@ -43,7 +43,7 @@ def signup_view(request: HttpRequest) -> HttpResponse:
 def guest_login_view(request: HttpRequest) -> HttpResponse:
     guest_suffix = "".join(random.choices(string.digits, k=6))
     username = f"guest_{guest_suffix}"
-    password = User.objects.make_random_password()
+    password = "".join(random.choices(string.ascii_letters + string.digits, k=12))
     user = User.objects.create_user(username=username, password=password)
     login(request, user)
     return redirect("dashboard")

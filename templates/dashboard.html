@@ -240,7 +240,7 @@
             ],
             onAction: (actionId) => {
                 if (actionId === 'create_project') openCreateModal();
-                if (actionId === 'logout') document.querySelector('form[action="{% url \'logout\' %}"]').submit();
+                if (actionId === 'logout') document.querySelector(`form[action="{% url 'logout' %}"]`).submit();
             }
         });
     </script>
