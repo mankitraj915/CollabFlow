@@ -43,6 +43,7 @@ services:
       DJANGO_SECRET_KEY: production-secret-key-change-this
       DJANGO_DEBUG: "False"
       DJANGO_ALLOWED_HOSTS: "*"
+      DATABASE_URL: postgres://postgres:postgres@db:5432/collabflow
       POSTGRES_DB: collabflow
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

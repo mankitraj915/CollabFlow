@@ -17,6 +17,7 @@ DEBUG: bool = os.environ.get("DJANGO_DEBUG", "True").lower() in ("true", "1", "y
 
 ALLOWED_HOSTS: list[str] = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 CSRF_TRUSTED_ORIGINS: list[str] = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "https://*.onrender.com").split(",")
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 INSTALLED_APPS: list[str] = [
     "daphne",
